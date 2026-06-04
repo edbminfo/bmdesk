@@ -137,13 +137,13 @@ fn check_update(manually: bool) -> ResultType<()> {
         #[cfg(target_os = "windows")]
         let download_url = if cfg!(feature = "flutter") {
             format!(
-                "{}/rustdesk-{}-x86_64.{}",
+                "{}/bmdesk-{}-x86_64.{}", // Trocado de rustdesk para bmdesk
                 download_url,
                 version,
                 if is_msi { "msi" } else { "exe" }
             )
         } else {
-            format!("{}/rustdesk-{}-x86-sciter.exe", download_url, version)
+            format!("{}/bmdesk-{}-x86-sciter.exe", download_url, version) // Trocado de rustdesk para bmdesk
         };
         log::debug!("New version available: {}", &version);
         let client = create_http_client_with_url(&download_url);
