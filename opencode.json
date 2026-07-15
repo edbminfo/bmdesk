@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "agent": {
+    "flutter": {
+      "description": "Flutter/Dart UI — use for flutter/lib/, widgets, pages, models",
+      "mode": "subagent"
+    },
+    "android": {
+      "description": "Android/Kotlin — use for flutter/android/, services, JNI bridge",
+      "mode": "subagent"
+    },
+    "rust": {
+      "description": "Rust backend — use for src/, libs/, Cargo.toml, server/client code",
+      "mode": "subagent"
+    },
+    "i18n": {
+      "description": "Translations — use for src/lang/*.rs localization work",
+      "mode": "subagent"
+    }
+  }
+}
