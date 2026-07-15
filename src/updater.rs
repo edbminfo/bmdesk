@@ -142,9 +142,11 @@ fn check_update(manually: bool) -> ResultType<()> {
                     std::env::consts::ARCH
                 );
             };
+            let app_name = crate::common::get_app_name().to_lowercase();
             format!(
-                "{}/bmdesk-{}-{}.{}",
+                "{}/{}-{}-{}.{}",
                 download_url,
+                app_name,
                 version,
                 arch,
                 if update_msi { "msi" } else { "exe" }
