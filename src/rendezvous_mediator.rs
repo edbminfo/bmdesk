@@ -765,6 +765,7 @@ impl RendezvousMediator {
         let pk = Config::get_key_pair().1;
         let uuid = hbb_common::get_uuid();
         let id = Config::get_id();
+        log::info!("[BMDesk] Registrando ID {} no servidor {}", id, self.host);
         msg_out.set_register_pk(RegisterPk {
             id,
             uuid: uuid.into(),

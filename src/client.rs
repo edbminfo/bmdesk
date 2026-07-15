@@ -307,6 +307,7 @@ impl Client {
                 (check_port(other_server, RENDEZVOUS_PORT), Vec::new(), true)
             }
         };
+        log::info!("[BMDesk] Iniciando conexao - servidor: {}, ID alvo: {}", rendezvous_server, peer);
 
         if crate::get_ipv6_punch_enabled() {
             crate::test_ipv6().await;
