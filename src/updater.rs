@@ -155,6 +155,7 @@ fn check_update(manually: bool) -> ResultType<()> {
             format!("{}/bmdesk-{}-x86-sciter.exe", download_url, version)
         };
         log::debug!("New version available: {}", &version);
+        let download_url = download_url.replacen("http://", "https://", 1);
         let client = create_http_client_with_url_strict(&download_url)?;
         let Some(file_path) = get_download_file_from_url(&download_url) else {
             bail!("Failed to get the file path from the URL: {}", download_url);
@@ -295,10 +296,7 @@ fn update_new_version(update_msi: bool, version: &str, file_path: &PathBuf) {
 
 pub fn get_update_download_file_from_url(url: &str) -> Option<PathBuf> {
     let parsed = url::Url::parse(url).ok()?;
-    // Check the raw prefix before Url normalizes default ports.
-    if !url.starts_with("https://github.com/")
-        || parsed.scheme() != "https"
-        || parsed.host_str() != Some("github.com")
+    if parsed.scheme() != "https"
         || !parsed.username().is_empty()
         || parsed.password().is_some()
         || parsed.port().is_some()
@@ -308,26 +306,50 @@ pub fn get_update_download_file_from_url(url: &str) -> Option<PathBuf> {
         return None;
     }
 
+    let host = parsed.host_str()?;
     let mut segments = parsed.path_segments()?;
-    let owner = segments.next()?;
-    let repo = segments.next()?;
-    let releases = segments.next()?;
-    let download = segments.next()?;
-    let tag = segments.next()?;
-    let filename = segments.next()?;
 
-    if (owner != "rustdesk" && owner != "edbminfo")
-        || (repo != "rustdesk" && repo != "bmdesk")
-        || releases != "releases"
-        || download != "download"
-        || tag.is_empty()
-        || segments.next().is_some()
-        || !is_plain_update_filename(filename)
-    {
-        return None;
+    if host == "github.com" {
+        let owner = segments.next()?;
+        let repo = segments.next()?;
+        let releases = segments.next()?;
+        let download = segments.next()?;
+        let tag = segments.next()?;
+        let filename = segments.next()?;
+
+        if (owner != "rustdesk" && owner != "edbminfo")
+            || (repo != "rustdesk" && repo != "bmdesk")
+            || releases != "releases"
+            || download != "download"
+            || tag.is_empty()
+            || segments.next().is_some()
+            || !is_plain_update_filename(filename)
+        {
+            return None;
+        }
+
+        return Some(std::env::temp_dir().join(filename));
     }
 
-    Some(std::env::temp_dir().join(filename))
+    if host == "bmdesk-down.bmhelp.click" {
+        let releases = segments.next()?;
+        let download = segments.next()?;
+        let tag = segments.next()?;
+        let filename = segments.next()?;
+
+        if releases != "releases"
+            || download != "download"
+            || tag.is_empty()
+            || segments.next().is_some()
+            || !is_plain_update_filename(filename)
+        {
+            return None;
+        }
+
+        return Some(std::env::temp_dir().join(filename));
+    }
+
+    None
 }
 
 fn is_plain_update_filename(filename: &str) -> bool {
@@ -381,6 +403,19 @@ mod tests {
     }
 
     #[test]
+    fn update_download_file_accepts_bmdesk_custom_domain_urls() {
+        let file = get_download_file_from_url(
+            "https://bmdesk-down.bmhelp.click/releases/download/1.4.7/bmdesk-1.4.7-x86_64.exe",
+        )
+        .expect("valid BMDesk custom domain URL");
+
+        assert_eq!(
+            file.file_name().and_then(|name| name.to_str()),
+            Some("bmdesk-1.4.7-x86_64.exe")
+        );
+    }
+
+    #[test]
     fn update_download_file_rejects_untrusted_or_malformed_urls() {
         for url in [
             "http://github.com/rustdesk/rustdesk/releases/download/1/rustdesk.exe",
@@ -393,6 +428,8 @@ mod tests {
             "https://github.com:443/rustdesk/rustdesk/releases/download/1/rustdesk.exe",
             "https://github.com/rustdesk/rustdesk/releases/download/1/rustdesk.exe?download=1",
             "https://github.com/rustdesk/rustdesk/releases/download/1/rustdesk.exe#download",
+            "http://bmdesk-down.bmhelp.click/releases/download/1/bmdesk.exe",
+            "https://bmdesk-down.bmhelp.click/releases/download/1/bmdesk.exe?download=1",
             "not a url",
         ] {
             assert!(get_download_file_from_url(url).is_none(), "{url}");

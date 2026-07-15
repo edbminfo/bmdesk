@@ -974,8 +974,17 @@ pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
         }
     };
     let bytes = latest_release_response.bytes().await?;
-    let resp: hbb_common::VersionCheckResponse = serde_json::from_slice(&bytes)?;
-    let response_url = resp.url;
+    let response_url = if is_rustdesk() {
+        let resp: hbb_common::VersionCheckResponse = serde_json::from_slice(&bytes)?;
+        resp.url
+    } else {
+        let json: serde_json::Value = serde_json::from_slice(&bytes)?;
+        json.get("url")
+            .or_else(|| json.get("html_url"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string()
+    };
     let latest_release_version = response_url.rsplit('/').next().unwrap_or_default();
 
     if get_version_number(&latest_release_version) > get_version_number(crate::VERSION) {
