@@ -1324,6 +1324,23 @@ pub fn get_install_options() -> String {
     serde_json::to_string(&opts).unwrap_or("{}".to_owned())
 }
 
+pub fn get_silent_install_options(printer_override: Option<bool>) -> &'static str {
+    let install_printer = match printer_override {
+        Some(override_value) => override_value,
+        None => {
+            let app_name = crate::get_app_name();
+            let subkey = format!(".{}", app_name.to_lowercase());
+            let printer = get_reg_of_hkcr(&subkey, REG_NAME_INSTALL_PRINTER);
+            printer.as_deref() == Some("1")
+        }
+    };
+    if install_printer && is_win_10_or_greater() {
+        "desktopicon startmenu printer"
+    } else {
+        "desktopicon startmenu"
+    }
+}
+
 // This function return Option<String>, because some registry value may be empty.
 fn get_reg_of_hkcr(subkey: &str, name: &str) -> Option<String> {
     let hkcr = RegKey::predef(HKEY_CLASSES_ROOT);
@@ -2261,6 +2278,10 @@ fn get_shortcut_icon_location(install_dir: &str, exe: &str) -> String {
 }
 
 pub fn create_shortcut(id: &str) -> ResultType<()> {
+    if !crate::common::is_valid_untrusted_peer_id(id) {
+        bail!("Invalid peer id for shortcut");
+    }
+
     let exe = std::env::current_exe()?.to_str().unwrap_or("").to_owned();
     // https://github.com/rustdesk/rustdesk/issues/13735
     // Replace ':' with '_' for filename since ':' is not allowed in Windows filenames
@@ -3630,10 +3651,9 @@ pub fn update_to(file: &str) -> ResultType<()> {
 //    `1` and `3` must be done in custom actions.
 //    We need also to handle the command line parsing to find the tray processes.
 pub fn update_me_msi(msi: &str, quiet: bool) -> ResultType<()> {
-    let cmds = format!(
-        "chcp 65001 && msiexec /i {msi} {}",
-        if quiet { "/qn LAUNCH_TRAY_APP=N" } else { "" }
-    );
+    let quiet_args = if quiet { " /qn LAUNCH_TRAY_APP=N" } else { "" };
+    let cmds =
+        format!("chcp 65001 && msiexec /i \"{msi}\"{quiet_args} REBOOT=ReallySuppress /norestart");
     run_cmds(cmds, false, "update-msi")?;
     Ok(())
 }
@@ -3925,6 +3945,14 @@ pub fn is_x64() -> bool {
         GetNativeSystemInfo(&mut sys_info as _);
     }
     unsafe { sys_info.u.s().wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 }
+}
+
+pub fn release_arch_suffix() -> Option<&'static str> {
+    match std::env::consts::ARCH {
+        "x86_64" => Some("x86_64"),
+        "aarch64" => Some("aarch64"),
+        _ => None,
+    }
 }
 
 pub fn try_kill_rustdesk_main_window_process() -> ResultType<()> {
