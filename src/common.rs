@@ -1018,10 +1018,7 @@ pub fn get_custom_update_url() -> String {
     if is_rustdesk() {
         "https://api.rustdesk.com/version/latest".to_string()
     } else {
-        format!(
-            "https://bmdesk-down.bmhelp.click/releases/latest/{}",
-            get_app_name().to_lowercase()
-        )
+        "https://bmdesk-down.bmhelp.click/releases/latest".to_string()
     }
 }
 
