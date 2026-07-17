@@ -1,3 +1,14 @@
+# BMDesk Guide
+
+> Fork of RustDesk, branded as BMDesk. See `.opencode/agent.md` for full customization details.
+
+## BMDesk-Specific
+
+- **App name:** `BMDesk` (config.rs:72)
+- **Update server:** `https://bmdesk-down.bmhelp.click`
+- **Custom client:** `is_custom_client()` returns true. Several `!isCustomClient()` guards were REMOVED to enable update checks, see `flutter/lib/common.dart:4070` and `flutter/lib/desktop/pages/desktop_home_page.dart:451`.
+- **Version:** `1.4.10` (src/version.rs, Cargo.toml)
+
 # RustDesk Guide
 
 ## Project Layout
