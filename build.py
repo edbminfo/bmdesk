@@ -141,6 +141,13 @@ def make_parser():
             action='store_true',
             help='Skip packing, only flutter version + Windows supported'
         )
+        parser.add_argument(
+            '--32',
+            dest='arch32',
+            action='store_true',
+            default=False,
+            help='Build 32-bit (i686) version for legacy Windows'
+        )
     parser.add_argument(
         "--package",
         type=str
@@ -524,19 +531,32 @@ def main():
     if windows:
         # build virtual display dynamic library
         os.chdir('libs/virtual_display/dylib')
-        system2('cargo build --locked --release')
+        if args.arch32:
+            system2('cargo build --locked --release --target i686-pc-windows-msvc')
+        else:
+            system2('cargo build --locked --release')
         os.chdir('../../..')
 
         if flutter:
+            if args.arch32:
+                print("Error: 32-bit builds are only supported for legacy (non-Flutter) Windows builds.")
+                print("Please run without --flutter for 32-bit builds.")
+                exit(-1)
             build_flutter_windows(version, features, args.skip_portable_pack, args.conn_type)
             return
-        system2('cargo build --locked --release --features ' + features)
+        if args.arch32:
+            target = 'i686-pc-windows-msvc'
+            print(f'Building for 32-bit target: {target}')
+            system2(f'cargo build --locked --release --target {target} --features ' + features)
+            exe_src = f'target/{target}/release/rustdesk.exe'
+        else:
+            system2('cargo build --locked --release --features ' + features)
+            exe_src = 'target/release/rustdesk.exe'
         # system2('upx.exe target/release/rustdesk.exe')
-        if os.path.exists('target/release/rustdesk.exe'):
-            os.rename('target/release/rustdesk.exe', 'target/release/RustDesk.exe')
+        if os.path.exists(exe_src):
+            os.rename(exe_src, 'target/release/RustDesk.exe')
         pa = os.environ.get('P')
         if pa:
-            # https://certera.com/kb/tutorial-guide-for-safenet-authentication-client-for-code-signing/
             system2(
                 f'signtool sign /a /v /p {pa} /debug /f .\\cert.pfx /t http://timestamp.digicert.com  '
                 'target\\release\\rustdesk.exe')
@@ -549,7 +569,8 @@ def main():
         system2(
             f'python ./generate.py -f ../../{res_dir} -o . -e ../../{res_dir}/RustDesk.exe')
         os.chdir('../..')
-        installer = f'./rustdesk-{version}-win7-install.exe'
+        arch_suffix = 'i686' if args.arch32 else 'x86_64'
+        installer = f'./bmdesk-{version}-{arch_suffix}.exe'
         if os.path.exists('./target/release/rustdesk-portable-packer.exe'):
             shutil.copy2('./target/release/rustdesk-portable-packer.exe', installer)
             print(f'output location: {os.path.abspath(os.curdir)}\\{installer}')

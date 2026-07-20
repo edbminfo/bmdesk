@@ -213,6 +213,13 @@ class PlatformFFI {
       await _ffiBind.mainDeviceId(id: id);
       await _ffiBind.mainDeviceName(name: name);
       await _ffiBind.mainSetHomeDir(home: _homeDir);
+      try {
+        final hardConfig = await rootBundle.loadString('assets/hard.txt');
+        if (hardConfig.trim().isNotEmpty) {
+          final file = File('$_dir/hard.txt');
+          await file.writeAsString(hardConfig);
+        }
+      } catch (_) {}
       await _ffiBind.mainInit(
         appDir: _dir,
         customClientConfig: '',
