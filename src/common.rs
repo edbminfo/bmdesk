@@ -1081,17 +1081,20 @@ pub fn get_api_server(api: String, custom: String) -> String {
     res
 }
 
-fn get_api_server_(api: String, custom: String) -> String {
+fn get_api_server_(_api: String, _custom: String) -> String {
+    if crate::is_custom_client() {
+        return "https://api-bmdesk.bmhelp.click".to_owned();
+    }
     #[cfg(windows)]
     if let Ok(lic) = crate::platform::windows::get_license_from_exe_name() {
         if !lic.api.is_empty() {
             return lic.api.clone();
         }
     }
-    if !api.is_empty() {
-        return api.to_owned();
+    if !_api.is_empty() {
+        return _api.to_owned();
     }
-    let s0 = get_custom_rendezvous_server(custom);
+    let s0 = get_custom_rendezvous_server(_custom);
     if !s0.is_empty() {
         let s = crate::increase_port(&s0, -2);
         if s == s0 {
@@ -1100,7 +1103,7 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
-    "https://admin.rustdesk.com".to_owned()
+    "".to_owned()
 }
 
 #[inline]
