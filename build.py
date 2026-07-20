@@ -145,6 +145,13 @@ def make_parser():
         "--package",
         type=str
     )
+    parser.add_argument(
+        '--conn-type',
+        dest='conn_type',
+        choices=['incoming', 'outgoing'],
+        default=None,
+        help='Custom client connection type: incoming (only be accessed), outgoing (only access others)'
+    )
     if osx:
         parser.add_argument(
             '--screencapturekit',
@@ -437,7 +444,7 @@ def build_flutter_arch_manjaro(version, features):
     system2('HBB=`pwd`/.. FLUTTER=1 makepkg -f')
 
 
-def build_flutter_windows(version, features, skip_portable_pack):
+def build_flutter_windows(version, features, skip_portable_pack, conn_type=None):
     if not skip_cargo:
         system2(f'cargo build --locked --features {features} --lib --release')
         if not os.path.exists("target/release/librustdesk.dll"):
@@ -448,6 +455,10 @@ def build_flutter_windows(version, features, skip_portable_pack):
     os.chdir('..')
     shutil.copy2('target/release/deps/dylib_virtual_display.dll',
                  flutter_build_dir_2)
+    if conn_type:
+        _gen_custom_txt(conn_type)
+    else:
+        _clean_hard_txt()
     if skip_portable_pack:
         return
     os.chdir('libs/portable')
@@ -455,17 +466,35 @@ def build_flutter_windows(version, features, skip_portable_pack):
     system2(
         f'python ./generate.py -f ../../{flutter_build_dir_2} -o . -e ../../{flutter_build_dir_2}/bmdesk.exe')
     os.chdir('../..')
-    if os.path.exists('./rustdesk_portable.exe'):
+    if os.path.exists('./bmdesk_portable.exe'):
         os.replace('./target/release/rustdesk-portable-packer.exe',
-                   './rustdesk_portable.exe')
+                   './bmdesk_portable.exe')
     else:
         os.rename('./target/release/rustdesk-portable-packer.exe',
-                  './rustdesk_portable.exe')
+                  './bmdesk_portable.exe')
     print(
-        f'output location: {os.path.abspath(os.curdir)}/rustdesk_portable.exe')
-    os.rename('./rustdesk_portable.exe', f'./rustdesk-{version}-install.exe')
+        f'output location: {os.path.abspath(os.curdir)}/bmdesk_portable.exe')
+    os.rename('./bmdesk_portable.exe', f'./bmdesk-{version}-install.exe')
     print(
-        f'output location: {os.path.abspath(os.curdir)}/rustdesk-{version}-install.exe')
+        f'output location: {os.path.abspath(os.curdir)}/bmdesk-{version}-install.exe')
+
+
+def _gen_custom_txt(conn_type):
+    print(f'Generating hard.txt with conn-type={conn_type}...')
+    system2(
+        f'python gen_custom_client.py --conn-type {conn_type} -o hard.txt')
+    src = 'hard.txt'
+    dst = flutter_build_dir_2 + '/hard.txt'
+    if os.path.exists(src):
+        shutil.copy2(src, dst)
+        print(f'hard.txt copied to {dst}')
+
+
+def _clean_hard_txt():
+    for d in [flutter_build_dir_2 + '/hard.txt', 'hard.txt']:
+        if os.path.exists(d):
+            os.remove(d)
+            print(f'Removed stale {d}')
 
 
 def main():
@@ -499,7 +528,7 @@ def main():
         os.chdir('../../..')
 
         if flutter:
-            build_flutter_windows(version, features, args.skip_portable_pack)
+            build_flutter_windows(version, features, args.skip_portable_pack, args.conn_type)
             return
         system2('cargo build --locked --release --features ' + features)
         # system2('upx.exe target/release/rustdesk.exe')

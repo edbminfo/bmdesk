@@ -57,37 +57,20 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   final GlobalKey _childKey = GlobalKey();
 
 
-  //--versao cliente--//
-@override
+  @override
   Widget build(BuildContext context) {
     super.build(context);
-    // final isIncomingOnly = bind.isIncomingOnly(); // Não precisamos mais dessa verificação visual
+    final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Usamos Expanded para que a barra esquerda preencha toda a janela
-        Expanded(child: buildLeftPane(context)), 
-        // Linhas removidas:
-       //  if (!isIncomingOnly) const VerticalDivider(width: 1),
-      //   if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
+        buildLeftPane(context),
+        if (!isIncomingOnly) const VerticalDivider(width: 1),
+        if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
       ],
     ));
   }
-//   @override
-//   Widget build(BuildContext context) {
-//    super.build(context);
-//     final isIncomingOnly = bind.isIncomingOnly();
-//     return _buildBlock(
-//        child: Row(
-//      crossAxisAlignment: CrossAxisAlignment.start,
-//      children: [
-//        buildLeftPane(context),
-//        if (!isIncomingOnly) const VerticalDivider(width: 1),
-//        if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
-//      ],
-//     ));
-//  }
 
   Widget _buildBlock({required Widget child}) {
     return buildRemoteBlock(
@@ -149,7 +132,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     return ChangeNotifierProvider.value(
       value: gFFI.serverModel,
       child: Container(
-    //    width: isIncomingOnly ? 280.0 : 200.0, //versão cliente
+        width: isIncomingOnly ? 280.0 : 200.0,
         color: Theme.of(context).colorScheme.background,
         child: Stack(
           children: [

@@ -2106,19 +2106,43 @@ pub fn load_custom_client() {
         read_custom_client(data.trim());
         return;
     }
-    let Some(path) = std::env::current_exe().map_or(None, |x| x.parent().map(|x| x.to_path_buf()))
+    let Some(exe_dir) = std::env::current_exe().ok().and_then(|x| x.parent().map(|p| p.to_path_buf()))
     else {
         return;
     };
     #[cfg(target_os = "macos")]
-    let path = path.join("../Resources");
-    let path = path.join("custom.txt");
+    let exe_dir = exe_dir.join("../Resources");
+    let path = exe_dir.join("custom.txt");
     if path.is_file() {
         let Ok(data) = std::fs::read_to_string(&path) else {
             log::error!("Failed to read custom client config");
             return;
         };
         read_custom_client(&data.trim());
+    }
+    load_hard_config(&exe_dir);
+}
+
+fn load_hard_config(dir: &std::path::Path) {
+    let path = dir.join("hard.txt");
+    if !path.is_file() {
+        return;
+    }
+    let Ok(data) = std::fs::read_to_string(&path) else {
+        return;
+    };
+    for line in data.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        if let Some((k, v)) = line.split_once('=') {
+            let k = k.trim().to_owned();
+            let v = v.trim().to_owned();
+            if k == "conn-type" && (v == "incoming" || v == "outgoing") {
+                config::HARD_SETTINGS.write().unwrap().insert(k, v);
+            }
+        }
     }
 }
 

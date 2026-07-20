@@ -56,3 +56,10 @@ vcpkg_installed
 flutter/lib/generated_plugin_registrant.dart
 libsciter.dylib
 flutter/web/
+# custom client
+/hard.txt
+flutter/build/windows/**/hard.txt
+# android secrets
+flutter/android/key.properties
+flutter/android/app/*.keystore
+flutter/android/app/*.jks
