@@ -189,6 +189,7 @@ impl<T: InvokeUiSession> Remote<T> {
                     .set_connection_type(is_secured, direct, stream_type); // flutter -> connection_ready
                 if !is_secured
                     && !crate::common::is_direct_ip_access(&self.handler.get_id())
+                    && !crate::common::is_custom_client()
                     && !client::confirm_insecure_connection(&self.handler, &mut self.receiver).await
                 {
                     self.send_close_reason(&mut peer, "").await;
