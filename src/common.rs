@@ -2128,26 +2128,10 @@ pub fn load_custom_client() {
 
 fn load_hard_config(dir: &std::path::Path) {
     let path = dir.join("hard.txt");
-    _load_hard_config_file(&path);
-
-    // On Android, also check the app data directory
-    #[cfg(target_os = "android")]
-    {
-        let app_dir = config::APP_DIR.read().unwrap();
-        if !app_dir.is_empty() {
-            let alt_path = std::path::Path::new(&*app_dir).join("hard.txt");
-            if alt_path != path {
-                _load_hard_config_file(&alt_path);
-            }
-        }
-    }
-}
-
-fn _load_hard_config_file(path: &std::path::Path) {
     if !path.is_file() {
         return;
     }
-    let Ok(data) = std::fs::read_to_string(path) else {
+    let Ok(data) = std::fs::read_to_string(&path) else {
         return;
     };
     for line in data.lines() {
