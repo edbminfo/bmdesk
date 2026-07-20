@@ -1,0 +1,16 @@
+Compilar com modo específico:
+# Versão incoming-only (só é acessado):
+python build.py --flutter --conn-type incoming
+
+# Versão outgoing-only (só acessa outros):
+python build.py --flutter --conn-type outgoing
+
+# Versão normal (ambos modos):
+python build.py --flutter
+
+
+Comando	Saída
+python build.py	Legacy — rustdesk-1.4.10-win7-install.exe (9.1 MB, Sciter UI)
+python build.py --flutter	Flutter — bmdesk-1.4.10-install.exe (23.5 MB)
+python build.py --flutter --conn-type incoming	Flutter incoming-only
+python build.py --flutter --conn-type o	Flutter outgoing-only
