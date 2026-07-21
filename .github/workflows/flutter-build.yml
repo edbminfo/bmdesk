@@ -116,6 +116,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Restore bridge files
@@ -405,6 +406,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Install LLVM and Clang
@@ -556,6 +558,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Install flutter
@@ -681,6 +684,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Import the codesign cert
@@ -994,6 +998,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Install flutter
@@ -1266,6 +1271,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Install flutter
@@ -1431,6 +1437,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Set Swap Space
@@ -1761,6 +1768,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Modify vcpkg.json for armv7
@@ -1963,6 +1971,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Download Binary
@@ -2037,6 +2046,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Download Binary
@@ -2098,6 +2108,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          token: ${{ secrets.HBB_COMMON_TOKEN }}
           submodules: recursive
 
       - name: Prepare env
