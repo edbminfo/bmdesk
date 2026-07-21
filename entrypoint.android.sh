@@ -25,6 +25,7 @@ done
 
 # Pre-build Flutter
 cd flutter
+sed -i 's/extended_text:.*/extended_text: ^14.0.0/' pubspec.yaml
 flutter pub get
 cd ..
 

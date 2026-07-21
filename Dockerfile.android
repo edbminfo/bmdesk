@@ -48,13 +48,14 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     /root/.cargo/bin/cargo install cargo-ndk
 
 # vcpkg with Android deps
-RUN git clone --branch 2025.05.15 --depth=1 https://github.com/microsoft/vcpkg /opt/vcpkg && \
+RUN git clone --branch 2025.06.13 --depth=1 https://github.com/microsoft/vcpkg /opt/vcpkg && \
     /opt/vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
-# Flutter SDK 3.44.1
+# Flutter SDK 3.24.5 (compatible with RustDesk non-arm64 Windows)
 RUN git clone --branch stable --depth=1 https://github.com/flutter/flutter.git ${FLUTTER_HOME} && \
     cd ${FLUTTER_HOME} && \
-    git checkout 3.44.1 2>/dev/null || true
+    git fetch --tags && \
+    git checkout 3.24.5 2>/dev/null || true
 
 WORKDIR /workspace
 COPY ./entrypoint.android.sh /entrypoint.sh
