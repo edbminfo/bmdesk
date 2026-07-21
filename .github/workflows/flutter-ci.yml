@@ -2,6 +2,19 @@ name: Full Flutter CI
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: "Plataforma"
+        required: false
+        type: choice
+        default: "all"
+        options:
+          - all
+          - android
+          - windows
+          - linux
+          - macos
+          - ios
   pull_request:
     paths-ignore:
     - "docs/**"
