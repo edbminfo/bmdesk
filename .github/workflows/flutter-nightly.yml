@@ -2,9 +2,29 @@ name: Flutter Nightly Build
 
 on:
   schedule:
-    # schedule build every night
     - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      windows:
+        description: "Windows"
+        type: boolean
+        default: true
+      android:
+        description: "Android"
+        type: boolean
+        default: true
+      linux:
+        description: "Linux"
+        type: boolean
+        default: false
+      macos:
+        description: "macOS"
+        type: boolean
+        default: false
+      ios:
+        description: "iOS"
+        type: boolean
+        default: false
 
 jobs:
   run-flutter-nightly-build:
@@ -13,3 +33,8 @@ jobs:
     with:
       upload-artifact: true
       upload-tag: "nightly"
+      windows: ${{ inputs.windows }}
+      android: ${{ inputs.android }}
+      linux: ${{ inputs.linux }}
+      macos: ${{ inputs.macos }}
+      ios: ${{ inputs.ios }}
