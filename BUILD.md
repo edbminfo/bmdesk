@@ -1,11 +1,38 @@
 # BMDesk - Instruções de Build Local
 
+## Rápido (scripts prontos)
+
+Cada plataforma tem seu próprio workspace isolado em `D:\vcpkg-installed\`. Use:
+
+```bat
+scripts\build_windows.bat
+scripts\build_android.bat arm64     # 64-bit
+scripts\build_android.bat arm       # 32-bit
+scripts\build_android.bat all       # ambos
+scripts\install_apk.bat             # instala APK 64-bit no celular
+```
+
+Ou com modo debug: `set MODE=debug && scripts\build_windows.bat`
+
 ## Pré-requisitos (todos)
 
 - Rust: `https://rustup.rs`
 - Git: `https://git-scm.com`
 - Vcpkg: `D:\vcpkg` (clonar de https://github.com/microsoft/vcpkg)
 - NDK 28.2.13676358 (apenas Android): instalar via Android Studio ou manualmente
+
+## Isolamento de Workspace
+
+Cada script usa `--x-install-root` para isolar dependências vcpkg:
+
+```
+D:\vcpkg-installed\
+├── windows\        → build_windows.bat
+├── android-arm64\  → build_android.bat arm64
+└── android-arm\    → build_android.bat arm
+```
+
+Windows e Android não interferem mais um no outro.
 
 ## Clonar o repositório
 
