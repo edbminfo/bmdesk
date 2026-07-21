@@ -183,7 +183,7 @@ elseif(VCPKG_TARGET_IS_IOS)
 --extra-ldflags=\"-arch arm64 -mios-version-min=8.0 -fembed-bitcode\" \
 ")
 elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Android")
-    string(APPEND OPTIONS "\
+    string(APPEND OPTIONS " \
 --target-os=android \
 --disable-asm \
 --disable-iconv \
@@ -234,7 +234,12 @@ if(VCPKG_DETECTED_CMAKE_C_COMPILER)
     string(APPEND OPTIONS " --cc=${CC_filename}")
 
     if(VCPKG_HOST_IS_WINDOWS)
-        string(APPEND OPTIONS " --host_cc=${CC_filename}")
+        if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Android")
+            set(HOST_CC_EXEC "C:/PROGRA~1/LLVM/bin/clang.exe")
+            string(APPEND OPTIONS " --host_cc=${HOST_CC_EXEC}")
+        else()
+            string(APPEND OPTIONS " --host_cc=${CC_filename}")
+        endif()
     endif()
 
     list(APPEND prog_env "${CC_path}")
