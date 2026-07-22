@@ -1,0 +1,121 @@
+# escape=`
+
+# BMDesk Windows Build Environment (~25 GB)
+# Requires: Docker Desktop for Windows with "Windows containers" mode enabled
+# Build: docker compose -f docker-compose.windows.yml build
+# Run:   docker compose -f docker-compose.windows.yml run --rm bmdesk-windows-build
+
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+ENV RUSTUP_HOME=C:\Users\ContainerAdministrator\.rustup `
+    CARGO_HOME=C:\Users\ContainerAdministrator\.cargo `
+    VCPKG_ROOT=C:\vcpkg `
+    LIBCLANG_PATH=C:\tools\llvm\bin `
+    LLVM_CONFIG_PATH=C:\tools\llvm\bin\llvm-config.exe
+
+# ── Helper: append dirs to Machine PATH ──
+# Must run in every layer that needs tools from a previous layer
+RUN $dirs = @( `
+        'C:\tools\bin', `
+        'C:\tools\cmake\bin', `
+        'C:\tools\ninja', `
+        'C:\tools\python', `
+        'C:\tools\python\Scripts', `
+        'C:\tools\llvm\bin', `
+        'C:\Program Files\Git\cmd', `
+        'C:\Program Files\Git\bin', `
+        'C:\Program Files\Git\usr\bin', `
+        'C:\Users\ContainerAdministrator\.cargo\bin', `
+        'C:\tools\rust\bin', `
+        'C:\tools\flutter\bin' `
+    ); `
+    $cur = [Environment]::GetEnvironmentVariable('PATH', 'Machine'); `
+    $cur = ($dirs + $cur) -join ';'; `
+    [Environment]::SetEnvironmentVariable('PATH', $cur, 'Machine'); `
+    $env:PATH = $cur
+
+# ── Visual Studio 2022 Build Tools (MSVC + Windows SDK) ──
+ADD https://aka.ms/vs/17/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
+    --installPath C:\BuildTools `
+    --add Microsoft.VisualStudio.Workload.VCTools `
+    --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+    --add Microsoft.VisualStudio.Component.VC.CMake.Project `
+    --add Microsoft.VisualStudio.Component.Windows11SDK.22621 `
+    --add Microsoft.VisualStudio.Component.TestTools.BuildTools `
+    --add Microsoft.VisualStudio.Component.VC.ASAN `
+    --includeRecommended; `
+    Remove-Item C:\TEMP\vs_buildtools.exe -Force
+
+# ── Git ──
+ADD https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.2/Git-2.47.1.2-64-bit.exe C:\TEMP\git-installer.exe
+RUN Start-Process -FilePath C:\TEMP\git-installer.exe -ArgumentList '/VERYSILENT','/NORESTART','/NOCANCEL','/SP-','/LOG' -Wait -NoNewWindow; `
+    Remove-Item C:\TEMP\git-installer.exe -Force
+
+# ── Python 3.11 ──
+ADD https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe C:\TEMP\python-installer.exe
+RUN Start-Process -FilePath C:\TEMP\python-installer.exe -ArgumentList '/quiet','InstallAllUsers=1','PrependPath=1','Include_test=0' -Wait -NoNewWindow; `
+    Remove-Item C:\TEMP\python-installer.exe -Force
+
+# ── LLVM 15.0.6 ──
+ADD https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.6/LLVM-15.0.6-win64.exe C:\TEMP\llvm-installer.exe
+RUN Start-Process -FilePath C:\TEMP\llvm-installer.exe -ArgumentList '/S','/D=C:\tools\llvm' -Wait -NoNewWindow; `
+    Remove-Item C:\TEMP\llvm-installer.exe -Force
+
+# ── CMake 3.30 ──
+ADD https://github.com/Kitware/CMake/releases/download/v3.30.6/cmake-3.30.6-windows-x86_64.zip C:\TEMP\cmake.zip
+RUN Expand-Archive -Path C:\TEMP\cmake.zip -DestinationPath C:\TEMP\cmake_extract; `
+    New-Item -ItemType Directory -Path C:\tools -Force; `
+    Move-Item -Path C:\TEMP\cmake_extract\cmake-3.30.6-windows-x86_64 -Destination C:\tools\cmake; `
+    Remove-Item C:\TEMP\cmake.zip -Force; `
+    Remove-Item C:\TEMP\cmake_extract -Recurse -Force
+
+# ── Ninja ──
+ADD https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip C:\TEMP\ninja.zip
+RUN Expand-Archive -Path C:\TEMP\ninja.zip -DestinationPath C:\tools\ninja; `
+    Remove-Item C:\TEMP\ninja.zip -Force
+
+# ── NASM (for vcpkg codec builds) ──
+ADD https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/win64/nasm-2.16.03-win64.zip C:\TEMP\nasm.zip
+RUN Expand-Archive -Path C:\TEMP\nasm.zip -DestinationPath C:\TEMP\nasm_extract; `
+    Copy-Item -Path C:\TEMP\nasm_extract\nasm-2.16.03\* -Destination C:\tools\bin\ -Recurse -Force; `
+    Remove-Item C:\TEMP\nasm.zip -Force; `
+    Remove-Item C:\TEMP\nasm_extract -Recurse -Force
+
+# ── Rust 1.75 ──
+ADD https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe C:\TEMP\rustup-init.exe
+RUN C:\TEMP\rustup-init.exe -y --default-toolchain 1.75.0 --default-host x86_64-pc-windows-msvc; `
+    Remove-Item C:\TEMP\rustup-init.exe -Force
+
+# ── Rust targets + tools (PATH must include cargo) ──
+RUN $env:PATH = "$env:CARGO_HOME\bin;$env:PATH"; `
+    rustup target add i686-pc-windows-msvc; `
+    rustup component add rustfmt
+
+# ── Flutter 3.44.1 ──
+ADD https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.44.1-stable.zip C:\TEMP\flutter.zip
+RUN if (Test-Path C:\tools\flutter) { Remove-Item C:\tools\flutter -Recurse -Force }; `
+    Expand-Archive -Path C:\TEMP\flutter.zip -DestinationPath C:\tools; `
+    Remove-Item C:\TEMP\flutter.zip -Force
+
+# Precache Windows engine
+RUN $env:PATH = "C:\tools\flutter\bin;C:\Program Files\Git\cmd;$env:PATH"; `
+    git config --global user.email \"builder@bmdesk.local\"; `
+    git config --global user.name \"BMDesk Builder\"; `
+    flutter config --no-analytics 2>$null; `
+    flutter precache --windows; `
+    flutter doctor -v
+
+# ── vcpkg ──
+RUN $env:PATH = "C:\Program Files\Git\cmd;$env:PATH"; `
+    git clone --branch 2024.12.16 --depth 1 https://github.com/microsoft/vcpkg C:\vcpkg; `
+    & C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+# ── Workspace ──
+WORKDIR /workspace
+COPY entrypoint.windows.ps1 /entrypoint.ps1
+
+ENTRYPOINT ["powershell", "-File", "C:/entrypoint.ps1"]
+CMD [""]

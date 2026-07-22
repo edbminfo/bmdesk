@@ -10,7 +10,16 @@ python build.py --flutter
 
 
 Comando	Saída
-python build.py	Legacy — rustdesk-1.4.10-win7-install.exe (9.1 MB, Sciter UI)
-python build.py --flutter	Flutter — bmdesk-1.4.10-install.exe (23.5 MB)
+python build.py	--32 //    Legacy — rustdesk-1.4.10-win7-install.exe (9.1 MB, Sciter UI)
+python build.py --flutter	
 python build.py --flutter --conn-type incoming	Flutter incoming-only
 python build.py --flutter --conn-type o	Flutter outgoing-only
+
+
+# Versão incoming-only:
+python gen_custom_client.py --conn-type incoming -o flutter/assets/hard.txt
+cd flutter && flutter build apk --split-per-abi --release
+
+# Versão normal:
+rm flutter/assets/hard.txt
+cd flutter && flutter build apk --split-per-abi --release

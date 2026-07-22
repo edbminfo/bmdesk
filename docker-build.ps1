@@ -27,7 +27,9 @@ param(
     [string]$ConnType = "",
 
     [ValidateSet("release", "debug")]
-    [string]$Mode = "release"
+    [string]$Mode = "release",
+
+    [switch]$Docker
 )
 
 $env:MODE = $Mode
@@ -46,16 +48,34 @@ switch ($Target) {
         Write-Host "Output: flutter/build/app/outputs/"
     }
     "windows" {
-        Write-Host "=== BMDesk Windows Build ===" -ForegroundColor Cyan
+        if ($Docker) {
+            Write-Host "=== BMDesk Windows Build (Docker Compose) ===" -ForegroundColor Cyan
+            Write-Host "Building Docker image (this will take a long time on first run)..." -ForegroundColor Yellow
 
-        $args = @("--flutter")
-        if ($ConnType) {
-            $args += "--conn-type", $ConnType
+            docker compose -f docker-compose.windows.yml build
+
+            Write-Host "Running Windows build in container..." -ForegroundColor Yellow
+            $entryArgs = @()
+            if ($ConnType) {
+                $entryArgs += "-ConnType", $ConnType
+            }
+
+            docker compose -f docker-compose.windows.yml run --rm bmdesk-windows-build @entryArgs
+
+            Write-Host "Build complete!" -ForegroundColor Green
+            Write-Host "Output: bmdesk-*-install.exe"
+        } else {
+            Write-Host "=== BMDesk Windows Build ===" -ForegroundColor Cyan
+
+            $args = @("--flutter")
+            if ($ConnType) {
+                $args += "--conn-type", $ConnType
+            }
+
+            python build.py @args
+
+            Write-Host "Build complete!" -ForegroundColor Green
+            Write-Host "Output: bmdesk-*-install.exe"
         }
-
-        python build.py @args
-
-        Write-Host "Build complete!" -ForegroundColor Green
-        Write-Host "Output: bmdesk-*-install.exe"
     }
 }

@@ -1,0 +1,29 @@
+# BMDesk Windows Build via Docker
+#
+# PREREQUISITES:
+#   1. Docker Desktop for Windows with "Windows containers" mode enabled
+#      (right-click tray icon -> "Switch to Windows containers...")
+#   2. At least 60 GB free disk space (image + vcpkg artifacts + build output)
+#
+# FIRST BUILD (builds the ~25 GB image):
+#   docker compose -f docker-compose.windows.yml build
+#
+# BUILD BMDesk:
+#   docker compose -f docker-compose.windows.yml run bmdesk-windows-build
+#   docker compose -f docker-compose.windows.yml run bmdesk-windows-build -ConnType incoming
+#   docker compose -f docker-compose.windows.yml run bmdesk-windows-build -Arch i686
+#
+# INTERACTIVE SHELL:
+#   docker compose -f docker-compose.windows.yml run bmdesk-windows-build powershell
+
+services:
+  bmdesk-windows-build:
+    build:
+      context: .
+      dockerfile: Dockerfile.windows
+    image: bmdesk-windows:latest
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    # Default: show entrypoint help
+    command: [""]
